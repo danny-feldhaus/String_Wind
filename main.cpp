@@ -5,13 +5,13 @@
 using string_wind::path_calculator;
 using string_wind::path_parameters;
 using string_wind::point;
-using string_wind::fpoint;
+using string_wind::point;
 using std::vector;
 using cimg_library::CImg;
 
-vector<fpoint> Circular_Pins(const int pin_count, const float radius, const float center_x, const float center_y)
+vector<point<float>> Circular_Pins(const int pin_count, const float radius, const float center_x, const float center_y)
 {
-    vector<fpoint> pins;
+    vector<point<float>> pins;
     float angle;
     float xpos, ypos;
     for(int i=0; i<pin_count; i++)
@@ -19,7 +19,7 @@ vector<fpoint> Circular_Pins(const int pin_count, const float radius, const floa
         angle = 2 * 3.14159 * (float)i/pin_count;
         xpos = cos(angle)*radius + center_x;
         ypos = sin(angle)*radius + center_y;
-        pins.push_back(fpoint(xpos,ypos));
+        pins.push_back(point<float>(xpos,ypos));
     }
     return pins;
 }
@@ -27,7 +27,7 @@ int main()
 {
     int pin_count = 256;
     path_parameters parameters;
-    parameters.file_name = (char*)"daddy3.png";
+    parameters.file_name = (char*)"Input_Images/daddy3.png";
     parameters.canvas_size_in_feet = 2;
     parameters.pins = Circular_Pins(pin_count,0.49,0.5,0.5);
     parameters.channels = 1;
