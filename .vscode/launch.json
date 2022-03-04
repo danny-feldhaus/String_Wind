@@ -9,7 +9,14 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/main.exe",
-            "args": [],
+            "args": [
+                "-P=256", //The number of pins  
+                "-F=Input_Images/daddy3.png", //The file to process
+                "-D=40", //The darkness threshold
+                "-C=1",
+                "-S=0.127",
+                "-M=0.5",
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

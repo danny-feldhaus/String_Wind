@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <cmath>
+#include <string>
 #include "path_calculation.h"
 
 using string_wind::path_calculator;
@@ -23,22 +24,48 @@ vector<point<float>> Circular_Pins(const int pin_count, const float radius, cons
     }
     return pins;
 }
-int main()
+int main(int argc, char** args)
 {
-    int pin_count = 256;
     path_parameters parameters;
-    parameters.file_name = (char*)"Input_Images/daddy3.png";
-    parameters.canvas_size_in_feet = 2;
+    int pin_count;
+    for(int i=0; i<argc; i++)
+    {
+        if(strncmp(args[i],(char*)"-P=",3)==0)
+        {
+            pin_count = atoi(args[i]+3);
+        }
+        else if(strncmp(args[i],(char*)"-F=",3)==0)
+        {
+            parameters.file_name = args[i]+3;
+        }
+        else if(strncmp(args[i],(char*)"-D=",3)==0)
+        {
+            parameters.darkness_threshold = atoi(args[i]+3);
+        }
+        else if(strncmp(args[i],(char*)"-M=",3)==0)
+        {
+            parameters.darkening_modifier = atof(args[i]+3);
+        }
+        else if(strncmp(args[i],(char*)"-C=",3)==0)
+        {
+            parameters.canvas_size_in_feet = atof(args[i]+3);
+        }
+        else if(strncmp(args[i],(char*)"-S",3)==0)
+        {
+            parameters.string_width_in_mm = atof(args[i]+3);
+        }
+    }
+
     parameters.pins = Circular_Pins(pin_count,0.49,0.5,0.5);
     parameters.channels = 1;
-    unsigned char black = 0;
+    float black = 0;
     parameters.colors.push_back(&black);
-    parameters.darkening_modifier = 0.5;
-    parameters.darkness_threshold = 40;
+    //parameters.darkening_modifier = 0.5;
+    //parameters.darkness_threshold = 40;
 
     path_calculator calculator = path_calculator(&parameters);
     vector<int> path = calculator.calculate_path();
-    CImg<unsigned char> string_image = calculator.draw_strings();
-    string_image.save("final_string_image.png");
+    CImg<float> string_image = calculator.draw_strings();
+    string_image.save("Output_Images/final_image.png");
     return 0;
 }

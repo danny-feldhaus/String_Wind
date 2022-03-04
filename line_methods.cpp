@@ -1,7 +1,7 @@
 #include "line_methods.h"
 using string_wind::line_methods;
 
-float line_methods::get_line_average_value(point<int> p0, point<int> p1,CImg<unsigned char>*image, CImg<unsigned char>* mask)
+float line_methods::get_line_average_value(point<int> p0, point<int> p1,CImg<float>*image, CImg<float>* mask)
 {
     point<int> cur_pixel;
     vector<point<int>> line_points;

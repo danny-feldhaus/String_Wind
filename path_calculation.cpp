@@ -13,20 +13,29 @@ string_wind::path_calculator::path_calculator(string_wind::path_parameters* para
     assert(parameters -> pins.size() > 0);
 
     //Load the image from the given location
-    modified_image = CImg<unsigned char>(parameters -> file_name);
-    assert(!input_image.empty());
-
+    modified_image = CImg<float>(parameters -> file_name);
+    assert(!modified_image.empty());
     pin_count = static_cast<int>(parameters -> pins.size());
     assert(pin_count > 1);
+    //The with of the image, with each pixel the width of a string
     int image_width = static_cast<int>(std::round(params -> canvas_size_in_feet / (params -> string_width_in_mm/305)));
+    float height_width_ratio = static_cast<float>(modified_image.height()) / modified_image.width();
+    int image_height = image_width * height_width_ratio;
+    //The ratio of the string's width (one pixel) to the image's width.
     unit_string_width = 1.0 / image_width;
+    //re-size the image to the correc timage width.
+    modified_image.resize(image_width,image_height);
 
-    //Load the image from the given file.
-    modified_image = CImg<unsigned char>(modified_image);
     //Convert the given unit points (0-1) to the scale of the given image (0-modified_image.width())
-    calculate_local_points(parameters -> pins);
+    calculate_local_points(parameters -> pins,modified_image,local_pins);
     //Calculate the mask for the image. All pixels with value (0,0,0) are not included in the mask, and not used in the lengths / grades calculations.
     image_methods::Calculate_Mask(modified_image,mask);
+
+    #if DEBUG
+        float* test_color = new float[3]{255,0,0};
+        CImg<float> test_difference = image_methods::Get_Color_Similarity(modified_image,test_color).mul(mask);
+        delete[] test_color;
+    #endif
     //Convert the modified image to grayscale, and invert it. This creates an image that represents the input image's darkness. Also, apply the mask.
     image_methods::Convert_To_Grayscale(modified_image, modified_image);
     modified_image = (255 - modified_image).mul(mask);
@@ -45,6 +54,7 @@ string_wind::path_calculator::path_calculator(string_wind::path_parameters* para
         {
             std::experimental::filesystem::remove_all(path);
         }
+        test_difference.save("Output_Images/test_difference_2 .png"); 
         (mask * 255).save("Output_Images/mask.png");
         modified_image.save("Output_Images/modified.png");
     #endif
@@ -62,15 +72,11 @@ string_wind::path_calculator::~path_calculator()
     delete[] path_lengths;
 }
 
-void string_wind::path_calculator::calculate_local_points(vector<point<float>>& unit_points)
+void string_wind::path_calculator::calculate_local_points(const vector<point<float>>& unit_points,const CImg<float>& image, vector<point<int>>& output_points)
 {
-    //std::cout << "Calculating local points for " << unit_points.size() << " pins.\n";
-    int min_size = min(modified_image.width(), modified_image.height());
     for(point<float> up : unit_points)
     {
-        local_pins.push_back(point<int>(min_size*up.x,min_size*up.y));
-        //std::cout << up << '\n';
-        //std::cout << local_pins.back() << '\n';
+        output_points.push_back(image_methods::Unit_To_Image(up,image));
     }
 }
 
@@ -151,7 +157,7 @@ vector<int> string_wind::path_calculator::calculate_path()
             {
                 std::cout << "Saving image to " << progress_file_name << ".\n";
             
-                CImg<unsigned char> progress_image = draw_strings();
+                CImg<float> progress_image = draw_strings();
                 progress_image.save(progress_file_name.c_str());
             }
         #endif
@@ -196,14 +202,26 @@ void string_wind::path_calculator::calculate_initial_grades()
     }
 }
 
-CImg<unsigned char> string_wind::path_calculator::draw_strings()
+CImg<float> string_wind::path_calculator::draw_strings()
 {
     int image_width = static_cast<int>(std::round(parameters -> canvas_size_in_feet / (parameters -> string_width_in_mm/305.0)));
     int image_height = image_width / ((float)modified_image.width() / (float)modified_image.height());
-    CImg<unsigned char> out_image(image_width,image_height, 1, parameters -> channels,255);
+    CImg<float> out_image(image_width,image_height, 1, parameters -> channels,255);
     #if DEBUG
     std::cout << "Path Length from draw_strings(): " << path.size() << '\n';
     #endif
     image_methods::Draw_Path(path,parameters -> pins, out_image);
     return out_image;
+}
+
+string_wind::path_instance::path_instance(CImg<float>* _values, path_parameters* _parameters, vector<point<int>>* _local_points)
+{
+    values = _values;
+    parameters = _parameters;
+    local_points = _local_points;
+}
+
+int string_wind::path_instance::move_to_next()
+{
+    return 0;
 }

@@ -15,12 +15,12 @@ namespace string_wind
     class image_methods
     {
         public:
-            static void Calculate_Mask(const CImg<unsigned char>& input_image, CImg<unsigned char>& output_mask);
-            static void Convert_To_Grayscale(const CImg<unsigned char>& input_image, CImg<unsigned char>& output_image);
-            static void Draw_Points(CImg<unsigned char>& input_image, const vector<point<int>> points, const unsigned char* color);
-            static void Draw_Path(vector<int>& indices, vector<point<float>>& pins, CImg<unsigned char> & output_image);
-            static point<int> Local_To_Image(const point<float>& local_point,const CImg<unsigned char>& image);
-            //static point<float> Image_To_Local(const point<int>& image_point,const CImg<unsigned char>& image);
-            static point<float> Image_To_Local(const point<int>& image_point, const CImg<unsigned char>& image);
+            static void Calculate_Mask(const CImg<float>& input_image, CImg<float>& output_mask);
+            static void Convert_To_Grayscale(const CImg<float>& input_image, CImg<float>& output_image);
+            static void Draw_Points(CImg<float>& input_image, const vector<point<int>> points, const float* color);
+            static void Draw_Path(vector<int>& indices, vector<point<float>>& pins, CImg<float> & output_image);
+            static point<int> Unit_To_Image(const point<float>& local_point, const CImg<float>& image);
+            static point<float> Image_To_Unit(const point<int>& image_point, const CImg<float>& image);
+            static CImg<float> Get_Color_Similarity(const CImg<float>& image, const float* color);
     };
 }

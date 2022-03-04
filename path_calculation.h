@@ -48,7 +48,7 @@ namespace string_wind
             //The number of color channels (1 = gray, 3 = rgb)
             int channels;
             //The list of colored strings being used
-            std::vector<unsigned char*> colors;
+            std::vector<float*> colors;
             float darkening_modifier;
             //The threshold at which the program will end and return the path
             float darkness_threshold;   
@@ -61,6 +61,20 @@ namespace string_wind
             static path_parameters* read_from_json(const char* file_name);
     };
 
+    class path_instance{
+        public:
+            path_instance(CImg<float>* _values, path_parameters* _parameters, vector<point<int>>* _local_points);
+            //Find the next pin in the path, and return its index.
+            int move_to_next();
+        private:
+            CImg<float>* values;
+            path_parameters* parameters;
+            vector<point<int>>* local_points;
+            vector<int> path;
+            int cur_best_score = 0;
+
+
+    };
 
     class path_calculator
     {
@@ -68,17 +82,17 @@ namespace string_wind
             path_calculator(path_parameters* parameters);
             ~path_calculator();
             std::vector<int> calculate_path();
-            cimg_library::CImg<unsigned char> draw_strings();
+            cimg_library::CImg<float> draw_strings();
+            static void calculate_local_points(const vector<point<float>>& unit_points,const CImg<float>& image, vector<point<int>>& output_points);
+
         private:            
             //The information for the image / path settings
             path_parameters* parameters;
             vector<point<int>> local_pins;
             //The path of the string, as a list of pin indices
             std::vector<int> path;
-            //The original, unedited image
-            cimg_library::CImg<unsigned char> input_image;
-            cimg_library::CImg<unsigned char> mask;
-            cimg_library::CImg<unsigned char> modified_image;
+            cimg_library::CImg<float> mask;
+            cimg_library::CImg<float> modified_image;
             //The grades for each path between pins. [p1][p2]
             float** path_grades;
             //The lengths for each path.
@@ -86,15 +100,14 @@ namespace string_wind
             //The points along each path.
             //std::vector<point<int>>** paths; 
             //The number of common pixels shared between each path
-            cimg_library::CImg<unsigned char> shared_pixels;
+            cimg_library::CImg<float> shared_pixels;
             //The number of pins
             int pin_count;
             //The width of the string with the canvas of width 1.
             int unit_string_width;
             void calculate_initial_grades();
-            void calculate_local_points(vector<point<float>>& unit_points);
-
     };
+
 }
 #endif
 

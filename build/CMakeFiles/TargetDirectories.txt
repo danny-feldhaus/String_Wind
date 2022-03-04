@@ -1,0 +1,5 @@
+/home/danny/Programming/String_Wind/build/CMakeFiles/edit_cache.dir
+/home/danny/Programming/String_Wind/build/CMakeFiles/package_source.dir
+/home/danny/Programming/String_Wind/build/CMakeFiles/rebuild_cache.dir
+/home/danny/Programming/String_Wind/build/CMakeFiles/package.dir
+/home/danny/Programming/String_Wind/build/CMakeFiles/String_Wind.dir

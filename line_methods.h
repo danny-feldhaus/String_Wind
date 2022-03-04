@@ -16,7 +16,7 @@ namespace string_wind
     class line_methods
     {
         public:
-            static float get_line_average_value(point<int> p0, point<int> p1,cimg_library::CImg<unsigned char>* image, cimg_library::CImg<unsigned char>* mask = nullptr);
+            static float get_line_average_value(point<int> p0, point<int> p1,cimg_library::CImg<float>* image, cimg_library::CImg<float>* mask = nullptr);
             static bool do_intersect(point<int> & p1, point<int> &  q1, point<int> &  p2, point<int>  &  q2);
         private:
             static int orientation(point<int> &  p, point<int> &  q, point<int> &  r);

@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/danny/Programming/String_Wind/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9    -g   -o CMakeFiles/String_Wind.dir/main.cpp.o -c /home/danny/Programming/String_Wind/main.cpp",
+  "file": "/home/danny/Programming/String_Wind/main.cpp"
+}
+]

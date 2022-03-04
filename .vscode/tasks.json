@@ -9,18 +9,16 @@
                 ";",
                 "g++",
                 "-Wall",
+                "*.cpp",
                 "-lm",
                 "-lpng",
                 "-lpthread",
                 "-Dcimg_display=0",
                 "-DDEBUG",
                 "-o",
-                "/mnt/c/Users/danny/Desktop/String Wind Portfolio/a.exe",
-                "*.cpp"
+                "main.exe"
             ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
+            "options": {},
             "problemMatcher": [
                 "$gcc"
             ],
@@ -30,13 +28,18 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
+            "command": "g++",
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
+                "-Wall",
+                "${workspaceFolder}/*.cpp",
+                "-lm",
+                "-lpng",
+                "-lpthread",
+                "-lstdc++fs",
+                "-Dcimg_display=0",
+                "-DDEBUG",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${workspaceFolder}/main.exe",
             ],
             "options": {
                 "cwd": "${fileDirname}"
