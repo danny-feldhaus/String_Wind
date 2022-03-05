@@ -13,12 +13,14 @@ path_calculation.h
 #include <CImg.h>
 #include <fstream>
 #include <assert.h>
-#include <string>
 #include <bits/stdc++.h>
+#include <algorithm>
 
 #if DEBUG
 #include <iostream>
 #include <experimental/filesystem>
+#include <string>
+//#include <format>
 #endif
 
 #include "point.h"
@@ -63,17 +65,25 @@ namespace string_wind
 
     class path_instance{
         public:
-            path_instance(CImg<float>* _values, path_parameters* _parameters, vector<point<int>>* _local_points);
+            path_instance(CImg<float>* _values, path_parameters* _parameters, vector<point<int>>* _local_points, CImg<float>* _mask);
             //Find the next pin in the path, and return its index.
             int move_to_next();
+            float get_best_score();
+            vector<int>& get_path();
         private:
             CImg<float>* values;
+            CImg<float>* mask;
             path_parameters* parameters;
             vector<point<int>>* local_points;
             vector<int> path;
-            int cur_best_score = 0;
+            int pin_count;
 
+            CImg<float> path_grades;
+            CImg<float> path_lengths;
 
+            float cur_best_score = 0;
+
+            void calculate_initial_grades();
     };
 
     class path_calculator
@@ -81,7 +91,7 @@ namespace string_wind
         public:
             path_calculator(path_parameters* parameters);
             ~path_calculator();
-            std::vector<int> calculate_path();
+            void calculate_path();
             cimg_library::CImg<float> draw_strings();
             static void calculate_local_points(const vector<point<float>>& unit_points,const CImg<float>& image, vector<point<int>>& output_points);
 
@@ -89,155 +99,16 @@ namespace string_wind
             //The information for the image / path settings
             path_parameters* parameters;
             vector<point<int>> local_pins;
-            //The path of the string, as a list of pin indices
-            std::vector<int> path;
-            cimg_library::CImg<float> mask;
-            cimg_library::CImg<float> modified_image;
-            //The grades for each path between pins. [p1][p2]
-            float** path_grades;
-            //The lengths for each path.
-            int** path_lengths;
-            //The points along each path.
-            //std::vector<point<int>>** paths; 
-            //The number of common pixels shared between each path
-            cimg_library::CImg<float> shared_pixels;
-            //The number of pins
-            int pin_count;
-            //The width of the string with the canvas of width 1.
+            vector<CImg<float>> color_difference_maps;
+            vector<float> grades;
+            vector<path_instance> path_instances;
+
+            CImg<float> full_image;
+            CImg<float> mask;
+
             int unit_string_width;
             void calculate_initial_grades();
     };
 
 }
 #endif
-
-/*
-
-    struct point<float>
-    {
-        float x;
-        float y;
-
-        point<float>()
-        {
-            x=0;
-            y=0;
-        }
-        point<float>(const float _x, const float _y)
-        {
-            x = _x;
-            y = _y;
-        }
-        int operator[](int i)
-        {
-            assert(i == 0 || i == 1);
-            if(i==0)
-            {
-                return x;
-            }
-            return y;
-        };
-        bool operator==(const point<float> other)
-        {
-            return x==other.x && y==other.y;
-        }
-        bool operator!=(const point<float> other)
-        {
-            return x != other.x || y != other.y;
-        }
-        bool operator<(const point<float> other)
-        {
-            if( x < other.x)
-            {
-                return true;
-            }
-            if(x == other.x)
-            {
-                return y < other.y;
-            }
-            return false;
-        }
-        point<float>& operator = (const point<float>& other)
-        {
-            x = other.x;
-            y = other.y;
-            return *this;
-        }
-        point<float>& operator * (const float mult)
-        {
-            x = x * mult;
-            y = y * mult;
-            return *this;
-        }
-        point<float>& operator / (const float div)
-        {
-            x = x / div;
-            y = y / div;
-            return *this;
-        }
-
-    };        
-    
-    inline std::ostream & operator <<(std::ostream & Str, point<float> & v)
-    {
-        Str << "(" << v.x << "," << v.y << ")";
-        return Str;
-    }
-    struct point
-    {
-        int x;
-        int y;
-
-        point()
-        {
-            x=0;
-            y=0;
-        }
-        point(const int _x, const int _y)
-        {
-            x = _x;
-            y = _y;
-        }
-        int operator[](int i)
-        {
-            assert(i == 0 || i == 1);
-            if(i==0)
-            {
-                return x;
-            }
-            return y;
-        };
-        bool operator==(const point other)
-        {
-            return x==other.x && y==other.y;
-        }
-        bool operator!=(const point other)
-        {
-            return x != other.x || y != other.y;
-        }
-        bool operator<(const point other)
-        {
-            if( x < other.x)
-            {
-                return true;
-            }
-            if(x == other.x)
-            {
-                return y < other.y;
-            }
-            return false;
-        }
-        point& operator = (const point& other)
-        {
-            x = other.x;
-            y = other.y;
-            return *this;
-        }
-    };
-
-    inline std::ostream & operator <<(std::ostream & Str, point & v)
-    {
-        Str << "(" << v.x << "," << v.y << ")";
-        return Str;
-    }
-*/

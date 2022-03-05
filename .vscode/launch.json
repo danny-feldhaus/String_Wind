@@ -12,8 +12,8 @@
             "args": [
                 "-P=256", //The number of pins  
                 "-F=Input_Images/daddy3.png", //The file to process
-                "-D=40", //The darkness threshold
-                "-C=1",
+                "-D=100", //The darkness threshold
+                "-C=2",
                 "-S=0.127",
                 "-M=0.5",
             ],

@@ -3,6 +3,10 @@
 #include <type_traits>
 #include <ostream>
 #include <cassert>
+#include <limits>
+#if DEBUG
+#include <iostream>
+#endif
 namespace string_wind
 {
     template <typename t>
@@ -22,6 +26,18 @@ namespace string_wind
             x = _x;
             y = _y;
         }
+        float distance_to(const point<t>& other)
+        {
+            return sqrt(pow(other.y - y,2) + pow(other.x - x,2));
+        }
+        float slope_to(const point<t>& other)
+        {
+            if(other.x == x)
+            {
+                return std::numeric_limits<float>::max();
+            }
+            return (float)(other.y - y) / (float)(other.x - x);
+        }
         const bool operator ==(const point<t>& other)
         {
             return x == other.x && y == other.y;
@@ -30,7 +46,7 @@ namespace string_wind
         {
             return !(&this == other);
         }
-        const bool operator < (const point<t>& other)
+        const bool operator <(const point<t>& other)
         {
             if(x < other.x)
             {
@@ -42,11 +58,11 @@ namespace string_wind
             }
             return false;
         }
-        const bool operator <= (const point<t>& other)
+        const bool operator <=(const point<t>& other)
         {
             return (&this < other) || (this == other);
         }
-        const bool operator > (const point<t>& other)
+        const bool operator >(const point<t>& other)
         {
             return !(&this <= other);
         }
@@ -54,23 +70,23 @@ namespace string_wind
         {
             return (&this == other) || (&this > other);
         }
-        point<t>& operator * (const t mult)
+        point<t>& operator *(const t mult)
         {
             return point(x * mult, y * mult);
         }
-        point<t>& operator / (const t mult)
+        point<t>& operator /(const t mult)
         {
             return point(x / mult, y / mult);
         }
-        point<t>& operator + (const point<t>& other)
+        point<t>& operator +(const point<t>& other)
         {
             return point(x + other.x, y + other.y);
         }
-        point<t>& operator - (const point<t>& other)
+        point<t>& operator -(const point<t>& other)
         {
             return point(x - other.x, y - other.y);
         }
-        void operator = (const point<t>& other)
+        void operator =(const point<t>& other)
         {
             x = other.x;
             y = other.y;

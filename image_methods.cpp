@@ -57,14 +57,13 @@ void image_methods::Draw_Points(CImg<float>& input_image, const vector<point<int
     }
 }
 
-void image_methods::Draw_Path(vector<int>& indices, vector<point<float>>& pins, CImg<float> & output_image)
+void image_methods::Draw_Path(vector<int>& indices, vector<point<float>>& pins, CImg<float> & output_image, const float* color)
 {
     int indexA, indexB;
     int image_width = output_image.width();
     int image_height = output_image.height();
     int min_size = min(image_height,image_width);
     point<int> pointA, pointB;
-    const float color[] = {0};
     #if DEBUG
     std::cout << "Drawing path of length " << (int)indices.size() << "\n";
     #endif

@@ -57,15 +57,39 @@ int main(int argc, char** args)
     }
 
     parameters.pins = Circular_Pins(pin_count,0.49,0.5,0.5);
-    parameters.channels = 1;
-    float black = 0;
-    parameters.colors.push_back(&black);
+    parameters.channels = 3;
+    float black[] = {0,0,0};
+    float white[] = {255.0,255.0,255.0};
+    float red[] = {255.0,0,0};
+    float green[] = {0,255.0,0};
+    float blue[] = {0,0,255.0};
+    parameters.colors.push_back(red);
+    parameters.colors.push_back(green);
+    parameters.colors.push_back(blue);
+    parameters.colors.push_back(black);
     //parameters.darkening_modifier = 0.5;
     //parameters.darkness_threshold = 40;
-
-    path_calculator calculator = path_calculator(&parameters);
-    vector<int> path = calculator.calculate_path();
+    #if DEBUG
+    std::cout << "Creating Calculator...";
+    #endif 
+    path_calculator calculator = path_calculator(&parameters); 
+    #if DEBUG
+    std::cout << "Done.\n";
+    std::cout << "Calculating path...";
+    #endif
+    calculator.calculate_path();
+    #if DEBUG
+    std::cout << "Drawing path...";
+    #endif
     CImg<float> string_image = calculator.draw_strings();
+    #if DEBUG
+    std::cout << "Done.\n";
+    std::cout << "Saving image... ";
+    #endif
     string_image.save("Output_Images/final_image.png");
+    #if DEBUG
+    std::cout << "Done.\n";
+    std::cout << "Finished.\n";
+    #endif
     return 0;
 }
