@@ -44,7 +44,7 @@ namespace string_wind
         }
         const bool operator !=(const point<t>& other)
         {
-            return !(&this == other);
+            return (x != other.x || y != other.y);
         }
         const bool operator <(const point<t>& other)
         {

@@ -10,6 +10,7 @@ using string_wind::point;
 using std::vector;
 using cimg_library::CImg;
 
+
 vector<point<float>> Circular_Pins(const int pin_count, const float radius, const float center_x, const float center_y)
 {
     vector<point<float>> pins;
@@ -54,19 +55,39 @@ int main(int argc, char** args)
         {
             parameters.string_width_in_mm = atof(args[i]+3);
         }
+        else if(strncmp(args[i],(char*)"-c",3)==0)
+        {
+            
+        }
     }
 
     parameters.pins = Circular_Pins(pin_count,0.49,0.5,0.5);
     parameters.channels = 3;
+    /*
     float black[] = {0,0,0};
     float white[] = {255.0,255.0,255.0};
-    float red[] = {255.0,0,0};
-    float green[] = {0,255.0,0};
-    float blue[] = {0,0,255.0};
-    parameters.colors.push_back(red);
-    parameters.colors.push_back(green);
-    parameters.colors.push_back(blue);
+    //float red[] = {255.0,0,0};
+    //float yellow[] = {255,255,0};
+    //float green[] = {0,255.0,0};
+    //float blue[] = {0,0,255.0};
+
+    float skin[] = {214,119,117};
+    float brown[] = {103,73,56};
+    float beard[] = {224,188,164};
+
+    float maris1[] = {189,108,102};
+    float maris2[] = {114,159,184};
+    float maris3[] = {192,109,214};
+    //parameters.colors.push_back(red);
+    //parameters.colors.push_back(green);
+    //parameters.colors.push_back(yellow);
+    parameters.colors.push_back(maris1);
+    parameters.colors.push_back(maris2);
+    parameters.colors.push_back(maris3);
+    //parameters.colors.push_back(yellow);
     parameters.colors.push_back(black);
+    parameters.colors.push_back(white);
+    */
     //parameters.darkening_modifier = 0.5;
     //parameters.darkness_threshold = 40;
     #if DEBUG

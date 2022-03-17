@@ -33,6 +33,7 @@ using cimg_library::CImg;
 using string_wind::point;
 using string_wind::line_methods;
 using string_wind::image_methods;
+using string_wind::color_RGB;
 
 namespace string_wind
 {
@@ -50,7 +51,7 @@ namespace string_wind
             //The number of color channels (1 = gray, 3 = rgb)
             int channels;
             //The list of colored strings being used
-            std::vector<float*> colors;
+            std::vector<color_RGB<float>> colors;
             float darkening_modifier;
             //The threshold at which the program will end and return the path
             float darkness_threshold;   
@@ -63,12 +64,46 @@ namespace string_wind
             static path_parameters* read_from_json(const char* file_name);
     };
 
+    struct pin_and_grade
+    {
+        int pin;
+        float grade;
+        pin_and_grade()
+        {
+            pin = -1;
+            grade = -1.0;
+        }
+        pin_and_grade(int _pin,float _grade)
+        {
+            pin = _pin;
+            grade = _grade;
+        }
+    };
+
+    struct path_step
+    {
+        int from_pin;
+        int to_pin;
+        color_RGB<float> color;
+        path_step(int _from_pin, int _to_pin, color_RGB<float> _color)
+        {
+            from_pin = _from_pin;
+            to_pin = _to_pin;
+            color = _color;
+        }
+        const bool operator==(path_step& other)
+        {
+            return from_pin == other.from_pin && to_pin == other.to_pin && color == other.color;
+        }
+    };
+
     class path_instance{
         public:
             path_instance(CImg<float>* _values, path_parameters* _parameters, vector<point<int>>* _local_points, CImg<float>* _mask);
             //Find the next pin in the path, and return its index.
             int move_to_next();
-            float get_best_score();
+            pin_and_grade get_next_best_pin_and_score();
+            int get_cur_pin();
             vector<int>& get_path();
         private:
             CImg<float>* values;
@@ -100,9 +135,8 @@ namespace string_wind
             path_parameters* parameters;
             vector<point<int>> local_pins;
             vector<CImg<float>> color_difference_maps;
-            vector<float> grades;
             vector<path_instance> path_instances;
-
+            vector<path_step> path;
             CImg<float> full_image;
             CImg<float> mask;
 

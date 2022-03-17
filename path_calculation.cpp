@@ -11,7 +11,7 @@ string_wind::path_calculator::path_calculator(string_wind::path_parameters* para
     assert(parameters -> string_width_in_mm > 0 && parameters -> string_width_in_mm / 305.0 < parameters -> canvas_size_in_feet);
     //Calculate the new image width, with the width of the pixel equal to the width of the string.
     assert(parameters -> pins.size() > 0);
-    assert(parameters -> colors.size() > 0);
+    //assert(parameters -> colors.size() > 0);
 
     full_image = CImg<float>(parameters -> file_name);
     //The with of the image, with each pixel the width of a string
@@ -27,25 +27,29 @@ string_wind::path_calculator::path_calculator(string_wind::path_parameters* para
     //Convert the given unit points (0-1) to the scale of the given image (0-modified_image.width())
     calculate_local_points(parameters -> pins,full_image,local_pins);
     //Calculate the mask for the image. All pixels with value (0,0,0) are not included in the mask, and not used in the lengths / grades calculations.
-    image_methods::Calculate_Mask(full_image,mask);
+    //TODO: CURRENTLY, MASKS ARE NOT IMPLEMENTED FOR FULL-COLOR IMAGES.
+    mask  = CImg<float>(full_image.width(), full_image.height(), 1,3,1);
+    parameters -> colors = image_methods::Get_Color_Palette(full_image,4);
 
-    for(float* color : parameters -> colors)
+    for(color_RGB<float> color : parameters -> colors)
     {
         color_difference_maps.push_back(image_methods::Get_Color_Similarity(full_image, color));
         path_instances.push_back(path_instance(&color_difference_maps.back(),parameters,&local_pins,&mask));
-        grades.push_back(path_instances.back().get_best_score());
     }
+
+
     #if DEBUG
-    std::cout << "Created " << path_instances.size() << " path instances.\n";
-    for(int i=0; i < (int)color_difference_maps.size(); i++)
-    {
-        //Clear the output_images directory
+        std::cout << "Created " << path_instances.size() << " path instances.\n";
         for (auto& path: std::experimental::filesystem::directory_iterator("Output_Images"))
         {
             std::experimental::filesystem::remove_all(path);
         }
-        color_difference_maps[i].save(("Output_Images/color_difference_" + std::to_string(i) + ".png").c_str());
-    }
+        for(int i=0; i < (int)color_difference_maps.size(); i++)
+        {
+            //Clear the output_images directory
+
+            color_difference_maps[i].save(("Output_Images/color_difference_" + std::to_string(i) + ".png").c_str());
+        }
     #endif
 
     /*
@@ -93,87 +97,112 @@ void string_wind::path_calculator::calculate_local_points(const vector<point<flo
     for(point<float> up : unit_points)
     {
         output_points.push_back(image_methods::Unit_To_Image(up,image));
-        #if DEBUG
-        std::cout << "Added local point " << output_points.back() << '\n';
-        #endif
     }
 }
 
 void string_wind::path_calculator::calculate_path()
 {   
     bool continue_calculating = true;
-    vector<float> best_scores;
+    pin_and_grade p_a_g;
     int pin_num = 0;
     int next_pin;
+    int best_pin = -1;
+    float best_grade = -1;
+    int best_path_instance;
     #if DEBUG
     std::cout << "Calculating Path...\n";
     #endif
     while(continue_calculating)
     {
+        best_grade = -1;
+        best_pin = -1;
+        next_pin = -1;
         std::cout << "Step #" << pin_num << '\n';
-        continue_calculating = false;
         for(int i=0; i< (int)path_instances.size(); i++)
         {
-            std::cout << "#" << i <<": ";
-            if(path_instances[i].get_best_score() > parameters -> darkness_threshold)
+            #if DEBUG
+            //std::cout << "Prev pin for color " << i << ": " << path_instances[i].get_cur_pin() << '\n';
+            #endif
+            p_a_g = path_instances[i].get_next_best_pin_and_score();
+            std::cout << "Grade for " << i << ": " << p_a_g.grade << '\n'; 
+            if(p_a_g.grade > best_grade)
             {
-                next_pin = path_instances[i].move_to_next();
-                #if DEBUG
-                std::cout << "\tPin #" << i << ": " << next_pin << '\n';
-                std::cout << "\t\tGrade: " << path_instances[i].get_best_score() << '\n';
-                #endif
-                continue_calculating = true;
+                best_grade = p_a_g.grade;
+              //  std::cout << "New Best Grade: " << best_grade << '\n';
+                best_pin = p_a_g.pin;
+                best_path_instance = i;
             }
         }
-        if((pin_num + 1) % 1000 == 0)
+        if(best_grade < (parameters -> darkness_threshold)) 
         {
-            std::cout << "Saving Progress at " + std::to_string(pin_num) + " steps.\n";
-            CImg<float> progress_img = draw_strings();
-            progress_img.save(("Output_Images/" + std::to_string(pin_num) + "_line_progress.png").c_str());
+            continue_calculating = false;
         }
-        pin_num++;
-
+        else
+        {
+            #if DEBUG
+            std::cout << "Moving from pin " << path_instances[best_path_instance].get_cur_pin() << " to " << best_pin << " with grade " << best_grade << " and color #" << best_path_instance << '\n'; 
+            #endif
+            path.push_back(path_step(path_instances[best_path_instance].get_cur_pin(),best_pin,parameters -> colors[best_path_instance]));
+            path_instances[best_path_instance].move_to_next();
+            #if DEBUG
+            if((pin_num + 1) % 1000 == 0)
+            {
+                std::cout << "Saving Progress at " + std::to_string(pin_num) + " steps.\n";
+                CImg<float> progress_img = draw_strings();
+                progress_img.save(("Output_Images/" + std::to_string(pin_num) + "_line_progress.png").c_str());
+            }
+            #endif
+            pin_num++;
+        }
     }
 }
 
 CImg<float> string_wind::path_calculator::draw_strings()
 {
-    CImg<float> out_image(full_image.width(), full_image.height(), 1, 3, 255.0);
+    CImg<float> out_image(full_image.width(), full_image.height(), 1, 3, 0.0);
     out_image.save("out_image_before_loop.png");
     vector<vector<int>> paths;
     vector<int>* cur_path;
     vector<int> path_lengths;
     vector<int> frequencies;
     point<int> point_a, point_b;
-    int max_length;
+    int max_length = 0;
+    int path_size;
     int path_index;
-    for(int i=0; i < (int)path_instances.size(); i++)
+
+    for(path_instance p_i : path_instances)
     {
-        paths.push_back(path_instances[i].get_path());
-        path_lengths.push_back((int) path_instances[i].get_path().size());
+        paths.push_back(p_i.get_path());
+        max_length = max(max_length, (int)paths.back().size());
     }
-    max_length = *max_element(path_lengths.begin(), path_lengths.end());
-    std::cout << "Max Length: " << max_length << '\n';
-    for(int i=0; i< (int)paths.size(); i++)
-    {
-        frequencies.push_back((max_length) / path_lengths[i]);
-    }
-    for(int i=0; i< max_length-1; i++)
+    for(int i=0; i<max_length-1; i++)
     {
         for(int j=0; j<(int)paths.size(); j++)
         {
             cur_path = &paths[j];
-
-            if((i % frequencies[j]) == 0 && ((path_index + 1) < (int)(cur_path -> size())))
+            path_size = static_cast<int>(cur_path -> size());
+            if(path_size >= max_length - i)
             {
-                const float color[] = {parameters -> colors[j][0], parameters -> colors[j][1], parameters -> colors[j][2]};
-                path_index = i / frequencies[j];
+                path_index = (i - (max_length - path_size)) ;
+                std::cout << "Index: " << path_index << '\n'; 
+                #if DEBUG
+                std::cout << "Path Size: " << path_size << ", Index: " << path_index << '\n'; 
+                #endif
                 point_a = local_pins[(*cur_path)[path_index]];
                 point_b = local_pins[(*cur_path)[path_index+1]];
-                out_image.draw_line(point_a.x,point_a.y,point_b.x,point_b.y,color);
+                float col[] = {parameters -> colors[i].r,parameters -> colors[i].g,parameters -> colors[i].b};
+                out_image.draw_line(point_a.x,point_a.y,point_b.x,point_b.y,col);
+
             }
         }
     }
+    /*
+    for(int i=0; i< (int)path.size(); i++)
+    {
+        point_a = local_pins[path[i].from_pin];
+        point_b = local_pins[path[i].to_pin];
+        out_image.draw_line(point_a.x,point_a.y,point_b.x,point_b.y,path[i].color);
+    }*/
     out_image.save("outimage.png");
     return out_image;
 }
@@ -190,6 +219,7 @@ string_wind::path_instance::path_instance(CImg<float>* _values, path_parameters*
     path.push_back(0);
 }
 
+
 int string_wind::path_instance::move_to_next()
 {
     int prev_pin = path.back();
@@ -200,24 +230,15 @@ int string_wind::path_instance::move_to_next()
     float cur_slope, a_b_slope, tangent, overlapped_pixels;
     float sum, lost_amount;
     point<int> point_a, point_b;
-    float best_grade = 0;
-    float cur_grade;
 
-    //Find the next best pin.
-    for(int i=0; i<pin_count; i++)
-    {
-        if(i != prev_pin)
-        {
-            cur_grade = path_grades(min(prev_pin,i),max(prev_pin,i));
-            if(cur_grade > best_grade)
-            {
-                best_grade = cur_grade;
-                next_pin = i;
-            }
-        }
-    }
-    cur_best_score = best_grade;
+
+    pin_and_grade next_pin_and_grade = get_next_best_pin_and_score();
+    next_pin = next_pin_and_grade.pin;
+    cur_best_score = next_pin_and_grade.grade;
     next_point = (*local_points)[next_pin];
+    #if DEBUG
+    std::cout << "\tMoving from " << prev_pin << " to " << next_pin << '\n';
+    #endif
     path.push_back(next_pin);
 
     //Update the scores based on the new line.
@@ -262,7 +283,13 @@ int string_wind::path_instance::move_to_next()
                 sum = a_b_grade * a_b_length;
                 lost_amount = a_b_grade * (1.0 - parameters -> darkening_modifier) * overlapped_pixels;
                 a_b_grade = (sum - lost_amount) / a_b_length;
+                #if DEBUG
+                //std::cout << "Grade Before: " << path_grades(index_a, index_b) << '\n';
+                #endif
                 path_grades(index_a, index_b) = a_b_grade;
+                #if DEBUG
+                //std::cout << "Grade After: " << path_grades(index_a, index_b) << '\n';
+                #endif
             }
         }
     }
@@ -292,9 +319,34 @@ void string_wind::path_instance::calculate_initial_grades()
     }
 }
 
-float string_wind::path_instance::get_best_score()
+string_wind::pin_and_grade string_wind::path_instance::get_next_best_pin_and_score()
 {
-    return cur_best_score;
+    //Find the next best pin.
+    int prev_pin = path.back();
+    int best_pin = -1;
+    float best_grade = 0;
+    float cur_grade;
+    for(int i=0; i<pin_count; i++)
+    {
+        if(i != prev_pin)
+        {
+            cur_grade = path_grades(min(prev_pin,i),max(prev_pin,i));
+            if(cur_grade > best_grade)
+            {
+                best_grade = cur_grade;
+                best_pin = i;
+            }
+        }
+    }
+    #if DEBUG
+    std::cout << "\tPrev Pin: " << prev_pin << ", Next Pin: " << best_pin << ", Grade: " << best_grade << '\n';
+    #endif
+    return pin_and_grade(best_pin,best_grade);
+}
+
+int string_wind::path_instance::get_cur_pin()
+{
+    return path.back();
 }
 
 vector<int>& string_wind::path_instance::get_path()

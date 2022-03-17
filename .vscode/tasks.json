@@ -8,6 +8,7 @@
             "args": [
                 ";",
                 "g++",
+                "-O0",
                 "-Wall",
                 "*.cpp",
                 "-lm",
@@ -31,6 +32,7 @@
             "command": "g++",
             "args": [
                 "-Wall",
+                "-O0",
                 "${workspaceFolder}/*.cpp",
                 "-lm",
                 "-lpng",
