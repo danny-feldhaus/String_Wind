@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.exe",
             "args": [
-                "-P=127", //The number of pins  
-                "-F=Input_Images/scared_guy.png", //The file to process
+                "-P=250", //The number of pins  
+                "-F=Input_Images/test_image.png", //The file to process
                 "-D=10", //The darkness threshold
                 "-C=2",
                 "-S=0.127",

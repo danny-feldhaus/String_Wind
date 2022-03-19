@@ -8,7 +8,7 @@ using string_wind::color_LAB;
 bool sort_by_count(const std::pair<color_RGB<float>, int> a, const std::pair<color_RGB<float>, int> b)
 {
     return a.second > b.second;
-}
+} 
 vector<color_RGB<float>> image_methods::Get_Color_Palette(const CImg<float>& image, const int palette_size, const float histogram_cell_size)
 {
     color_RGB<float> cur_color;
@@ -22,17 +22,17 @@ vector<color_RGB<float>> image_methods::Get_Color_Palette(const CImg<float>& ima
     cimg_forXY(image, x, y)
     {
         #if DEBUG
-        cout << "Raw Data: " << image(x,y,0,0) << ", " << image(x,y,0,1) << ", " << image(x,y,0,2) << "\n";
+        //cout << "Raw Data: " << image(x,y,0,0) << ", " << image(x,y,0,1) << ", " << image(x,y,0,2) << "\n";
 
         #endif
-        cur_color.set_from_array(image.data(x,y));
+        cur_color.set_from_image(image,x,y);
         #if DEBUG
-        std::cout << "Pre-Cell Floor: " << cur_color << '\n';
+        //std::cout << "Pre-Cell Floor: " << cur_color << '\n';
         #endif
         
-        cur_cell.set_values((int)(cur_color.r / histogram_cell_size),
-                            (int)(cur_color.g / histogram_cell_size),
-                            (int)(cur_color.b / histogram_cell_size));
+        cur_cell.set_values((int)(cur_color.get_r() / histogram_cell_size),
+                            (int)(cur_color.get_g() / histogram_cell_size),
+                            (int)(cur_color.get_b() / histogram_cell_size));
         histogram_cells[cur_cell]++;
         //std::cout << "Color " << cur_cell << " has " << histogram_cells[cur_cell] << " occurrences.\n";
     }
@@ -40,31 +40,27 @@ vector<color_RGB<float>> image_methods::Get_Color_Palette(const CImg<float>& ima
     {
         pairs.push_back(it);
     }
+    
+    std::sort(pairs.begin(), pairs.end(), [](auto &left, auto& right)
+    {
+        return left.second > right.second;
+    });
+
     for(int i=0; i<palette_size; i++)
     {
         best_pairs.push_back(pairs[i]);
     }
-    bool continue_checking_max;
-    for(int i=0; i < (int)pairs.size(); i++)
-    {
-        continue_checking_max = true;
-        for(int j=0; j<palette_size; j++)
-        {
-            if(continue_checking_max && (pairs[i].second > best_pairs[j].second))
-            {
-                best_pairs[j] = pairs[i];
-                continue_checking_max = false;
-            }
-        }
-    }
 
     for(int i=0; i<palette_size; i++)
     {   
-        average_cell_color.set_values(histogram_cell_size/2 + best_pairs[i].first.r * histogram_cell_size,
-                                      histogram_cell_size/2 + best_pairs[i].first.g * histogram_cell_size,
-                                      histogram_cell_size/2 + best_pairs[i].first.b * histogram_cell_size);
-        std::cout << "Added color " << average_cell_color << '\n';
-        palette.push_back(color_RGB<float>(average_cell_color.r, average_cell_color.g, average_cell_color.b));
+        average_cell_color.set_values(histogram_cell_size/2 + best_pairs[i].first.get_r() * histogram_cell_size,
+                                      histogram_cell_size/2 + best_pairs[i].first.get_g() * histogram_cell_size,
+                                      histogram_cell_size/2 + best_pairs[i].first.get_b() * histogram_cell_size);
+        #if DEBUG
+        std::cout << "Added color " << average_cell_color << " with count " << best_pairs[i].second << '\n';
+        #endif
+        
+        palette.push_back(color_RGB<float>(average_cell_color.get_r(), average_cell_color.get_g(), average_cell_color.get_b()));
     }
     return palette;
 }
@@ -111,18 +107,6 @@ void image_methods::Convert_To_Grayscale(const CImg<float>& input_image, CImg<fl
     output_image = gray;
 }
 
-
-void image_methods::Draw_Points(CImg<float>& input_image, const vector<point<int>> points, const color_RGB<float> color)
-{
-    int min_size = min(input_image.width(),input_image.height());
-    for(point<int> p : points)
-    {
-        input_image(min_size * p.x,min_size * p.y,0,0) = color.r;
-        input_image(min_size * p.x,min_size * p.y,0,0) = color.g;
-        input_image(min_size * p.x,min_size * p.y,0,0) = color.b;
-    }
-}
-
 void image_methods::Draw_Path(vector<int>& indices, vector<point<float>>& pins, CImg<float> & output_image, const float* color)
 {
     int indexA, indexB;
@@ -157,32 +141,25 @@ point<float> image_methods::Image_To_Unit(const point<int>& image_point, const C
     return point<float>(x,y);
 }
 
-CImg<float>image_methods::Get_Color_Similarity(const CImg<float>& image, const color_RGB<float> color)
+CImg<float>image_methods::Get_Color_Similarity(const CImg<float>& image, color_RGB<float> color)
 {
     //A roundabout way to convert to LAB. 
     //TODO: Write a specific rgb2lab function for individual colors.
-    CImg<float> LAB_color_image_for_conversion = CImg<float>(1,1,1,3);
     CImg<float> L_channel, A_channel, B_channel, difference_image;
-    //Convert the given RGB color to LAB by creating a 1 pixel image, converting that image, and then taking the new pixel's color.
-    //This is a gross and roundabout way of doing it, but it guarantees that the image / color LAB equations are the same.
-    LAB_color_image_for_conversion(0,0,0,0) = color.r;
-    LAB_color_image_for_conversion(0,0,0,1) = color.g;
-    LAB_color_image_for_conversion(0,0,0,2) = color.b;
-    LAB_color_image_for_conversion.RGBtoLab();
-    float* LAB_color = LAB_color_image_for_conversion.data();
+    color_LAB<float> LAB_color = color_LAB<float>(color);
     #if DEBUG
-    std::cout << "L: " << LAB_color[0] << ", A: " << LAB_color[1] << ", B: " << LAB_color[2] << '\n';
+    std::cout << "L: " << LAB_color.L << ", A: " << LAB_color.A << ", B: " << LAB_color.B << '\n';
     #endif
     CImg<float>LAB_image = CImg<float>((image.get_shared_channels(0,2)).get_RGBtoLab());
 
     //Calculate the deltaE by subtracting the color from the image, summing the square of the channels, and taking the square root. 
     //LAB_image -= LAB_color;
     L_channel = LAB_image.get_shared_channels(0,0);
-    L_channel = (L_channel - LAB_color[0]).sqr();
+    L_channel = (L_channel - LAB_color.L).sqr();
     A_channel = LAB_image.get_shared_channels(1,1);
-    A_channel = (A_channel - LAB_color[1]).sqr();
+    A_channel = (A_channel - LAB_color.A).sqr();
     B_channel = LAB_image.get_shared_channels(2,2);
-    B_channel = (B_channel - LAB_color[2]).sqr();
+    B_channel = (B_channel - LAB_color.B).sqr();
     difference_image = (L_channel + A_channel + B_channel).sqrt();
 
     //Return the negative of the image, so that higher number = more similar.

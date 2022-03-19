@@ -2,11 +2,13 @@
 #include <cmath>
 #include <string>
 #include "path_calculation.h"
+#include "color.h"
 
 using string_wind::path_calculator;
 using string_wind::path_parameters;
 using string_wind::point;
 using string_wind::point;
+using string_wind::color_RGB;
 using std::vector;
 using cimg_library::CImg;
 
@@ -62,7 +64,6 @@ int main(int argc, char** args)
     }
 
     parameters.pins = Circular_Pins(pin_count,0.49,0.5,0.5);
-    parameters.channels = 3;
     /*
     float black[] = {0,0,0};
     float white[] = {255.0,255.0,255.0};
@@ -74,22 +75,17 @@ int main(int argc, char** args)
     float skin[] = {214,119,117};
     float brown[] = {103,73,56};
     float beard[] = {224,188,164};
+*/
 
-    float maris1[] = {189,108,102};
-    float maris2[] = {114,159,184};
-    float maris3[] = {192,109,214};
-    //parameters.colors.push_back(red);
-    //parameters.colors.push_back(green);
-    //parameters.colors.push_back(yellow);
-    parameters.colors.push_back(maris1);
-    parameters.colors.push_back(maris2);
-    parameters.colors.push_back(maris3);
-    //parameters.colors.push_back(yellow);
-    parameters.colors.push_back(black);
-    parameters.colors.push_back(white);
-    */
-    //parameters.darkening_modifier = 0.5;
-    //parameters.darkness_threshold = 40;
+    //parameters.colors.push_back(color_RGB<float>(88, 78, 66 ));
+    //parameters.colors.push_back(color_RGB<float>(229,229,217));
+    //parameters.colors.push_back(color_RGB<float>(168,181,164));
+    //parameters.colors.push_back(color_RGB<float>(153,162,166));
+    parameters.colors.push_back(color_RGB<float>(0,0,0));
+    //parameters.colors.push_back(color_RGB<float>(255,255,255));
+
+    parameters.darkening_modifier = 0.5;
+    parameters.darkness_threshold = 40;
     #if DEBUG
     std::cout << "Creating Calculator...";
     #endif 

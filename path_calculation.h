@@ -26,6 +26,8 @@ path_calculation.h
 #include "point.h"
 #include "line_methods.h"
 #include "image_methods.h"
+#include "color.h"
+
 using std::max;
 using std::min;
 using std::vector;
@@ -142,6 +144,7 @@ namespace string_wind
 
             int unit_string_width;
             void calculate_initial_grades();
+            bool load_from_parameters();
     };
 
 }
