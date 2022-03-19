@@ -144,7 +144,7 @@ namespace string_wind
 
             int unit_string_width;
             void calculate_initial_grades();
-            bool load_from_parameters();
+            void load_from_parameters();
     };
 
 }

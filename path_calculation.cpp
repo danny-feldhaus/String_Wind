@@ -4,9 +4,9 @@ string_wind::path_calculator::path_calculator(string_wind::path_parameters* para
 {
     parameters = params;
 
-    assert_parameters();
+    load_from_parameters();
 
-    full_image = CImg<float>(parameters -> file_name);
+
     //The with of the image, with each pixel the width of a string
     int image_width = static_cast<int>(std::round(params -> canvas_size_in_feet / (params -> string_width_in_mm/305)));
     float height_width_ratio = static_cast<float>(full_image.height()) / full_image.width();
@@ -182,7 +182,10 @@ void string_wind::path_calculator::load_from_parameters()
         assert(p.y <= 1);
     }
 
-    
+    full_image = CImg<float>(parameters -> file_name);
+    assert(!full_image.empty());
+
+    return;
 }
 
 
